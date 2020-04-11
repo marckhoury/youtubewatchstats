@@ -1,0 +1,42 @@
+<html>
+  <head>
+    <title>YouTube Watch Statistics</title>
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename="css/style.css")}}">
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+  </head>
+  <body>
+    <section class="page-header">
+    <p>YouTube is one of the most engaging websites on the planet. Consequently it can be easy to lose track of how much time you spend watching videos online. <br> Upload your YouTube watch history and we'll provide detailed graphs to help you understand your viewing habits. </p>
+     
+    <form action='/results' method="post" enctype="multipart/form-data">
+        <input class="btn" type="file" name="watchHistoryFile" id="fileToUpload">
+        <input class="btn" type="submit" value="Submit" name="submit">
+    </form>
+
+    </section>
+    <section class="main-content">
+    <h2>Guide</h2>
+    The YouTube Data API does not allow us to query watch history directly, even with permission from the user. (They really don't want you to know how much time you spend on YouTube...) Instead please follow the instructions below to download your watch history and upload it to our service.
+    <ol>
+        <li>Go to <a href="https://takeout.google.com/settings/takeout">Google Takeout</a></li>
+        <li>Under "Select data to include" select "Deselect All", then scroll to bottom and select "Youtube and Youtube Music"</li>
+        <li>Further, select "All Youtube Data Included", select "Deselect All" and select only "history"</li>
+        <li>Click "Next Steps" and then click "Create Export"</li>
+        <li>Google will send you an email when the export is ready to be downloaded</li>
+        <li>Once you recieve the email, download and unzip the archive</li>
+        <li>Open the folders "YouTube and YouTube Music" and then "histoy"</li>
+        <li>From the history folder upload the file "watch-history.html" above</li>
+    </ol> 
+    
+    <h2>Privacy Statement</h2>
+    <p> We store the list of videos you provide in one aggregate list that includes all videos uploaded to our site. We do this so that we do not need to query the YouTube Data API for the same video multiple times. We do not store any information that would allow us to reconstruct your watch history from this one aggregate list. After we finish processing your watch history, we delete the file you proivded. The source code for this site is available on <a href="https://github.com/marckhoury/youtubewatchstats">GitHub</a> as proof.</p> 
+    </section>
+
+    <section class="site-footer">
+        <center>
+        <a href="https://twitter.com/TwitterDev?ref_src=twsrc%5Etfw" class="twitter-follow-button" data-size="large" data-show-screen-name="false" data-lang="en" data-show-count="false">Follow @TwitterDev</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+        <a class="github-button" href="https://github.com/marckhoury/youtubewatchstats" data-color-scheme="no-preference: light; light: light; dark: light;" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star marckhoury/youtubewatchstats on GitHub">Star</a> 
+        </center>
+    </section>
+  </body>
+</html>

@@ -1,0 +1,85 @@
+<html>
+  <head>
+    <title>YouTube Watch Statistics</title>
+    <script src="http://d3js.org/d3.v5.min.js"></script>
+    <script src="{{url_for('static', filename="js/charts.js")}}"></script>
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename="css/style.css")}}">
+  </head>
+  <body>
+    <section class="page-header">
+    <p>You've watched <b>{{data.number_of_videos}}</b> videos on YouTube, for a total of <b>{{'%0.2f' % data.total_days | float}} days</b> of watch time. </p>
+    <p>Graphs of your watch history are provided below. All graphs are interactive.</p>
+    
+    </section>
+
+    <section class="main-content">
+    <table>
+    <tr>
+        <td class="monthcount"/>
+        <td class="daycount"/>
+    </tr>
+    <tr>
+        <td class="monthsum"/>
+        <td class="daysum"/>
+    </tr>
+    <tr>
+        <td class="histogram"/>
+    </tr>
+    </table>
+
+    <script>
+        var margin = {top: 20, right: 20, bottom: 30, left: 40};
+        var width = 485 - margin.left - margin.right;
+        var height = 324 - margin.top - margin.bottom;
+
+        var data = {{data.month_count | safe}}
+        var svg = d3.select("td.monthcount").append("svg");
+        createBarChart(data, svg, margin, width, height, "number of videos");
+   
+        data = {{data.day_count | safe}}     
+        svg = d3.select("td.daycount").append("svg");
+        createBarChart(data, svg, margin, width, height, "number of videos");
+        
+        data = {{data.month_sum | safe}}
+        svg = d3.select("td.monthsum").append("svg");
+        createBarChart(data, svg, margin, width, height, "watch time (hours)"); 
+    
+        data = {{data.day_sum | safe}}
+        svg = d3.select("td.daysum").append("svg");
+        createBarChart(data, svg, margin, width, height, "watch time (hours)"); 
+
+        data = {{data.durations | safe}}
+        data_filtered = []
+        for(let i = 0; i < data.length; i++) {
+            if(data[i] < 60) {
+                data_filtered.push(data[i]);
+            }
+        }
+        svg = d3.select("td.histogram").append("svg");
+        createHistogram(data_filtered, svg, margin, width, height); 
+    </script>
+    
+
+    <h2>Caveats</h2>
+    <ol>
+        <li>The numbers reported above are computed by summing the full duration of each video in each window of time. We are not and cannot compute the amount of time you actually spent on the page. Many users may only watch short portions of videos, skipping between parts of interest. Thus the numbers above are an overestimate of your total watch time. </li>
+        <li>Google only provides you with your recent watch history, about the last 1-2 years. In this sense, the total watch time may be an underestimate of your lifetime watch history.</li>
+        <li>The numbers above do not include videos that are private or have been removed, either voluntarily or due to a copyright claim. In that sense the above numbers are an underestimate. </li>
+        <li>In the final graph, where we plot a histogram of video durations, we first filter the list removing any video longer than one hour. Most video lengths are less than one hour and we found that the visualization was less informative when we plotted the full tail of the distribution.
+    </ol> 
+   
+    <h2>Resources for YouTube Addiction</h2>
+    <p>
+    <a href="https://chrome.google.com/webstore/detail/df-tube-distraction-free/mjdepdfccjgcndkmemponafgioodelna?hl=en">DF Tube</a> is a Chrome extension that makes YouTube significantly less engaging. Alternatively you could just block it outright with <a href="https://chrome.google.com/webstore/detail/stayfocusd/laankejkbhbdhmipfmgcngdelahlfoji?hl=en">StayFocusd</a>. If you choose the latter option, I'd recommend also blocking Twitch. Just...trust me on that one. </p>
+    </section>   
+    
+    <section class="site-footer">
+        <center>
+        <a href="https://twitter.com/TwitterDev?ref_src=twsrc%5Etfw" class="twitter-follow-button" data-size="large" data-show-screen-name="false" data-lang="en" data-show-count="false">Follow @TwitterDev</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+        <a class="github-button" href="https://github.com/marckhoury/youtubewatchstats" data-color-scheme="no-preference: light; light: light; dark: light;" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star marckhoury/youtubewatchstats on GitHub">Star</a>
+        </center>
+    </section>
+
+  </body>
+</html>
