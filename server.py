@@ -37,6 +37,10 @@ dictConfig({
 
 app = Flask(__name__)
 
+youtube = api.create_youtube_api_client()
+conn = database.create_connection('yt-data.db')
+database.create_table(conn)
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -53,9 +57,6 @@ def results():
         parser.feed(data)
 
         app.logger.info('file successfully parsed')        
-
-        conn = database.create_connection('yt-data.db')
-        database.create_table(conn)
   
         queries = set([]) 
         for vid in parser.video_ids:
@@ -67,7 +68,6 @@ def results():
             queries = list(queries)
             queries = utils.chunks(queries, 50)
        
-            youtube = api.create_youtube_api_client()
             for query in queries:
                 remaining_queries = set(query)
 
@@ -90,7 +90,7 @@ def results():
         
             conn.commit()
         
-        app.logger.info('{0} videos of {1} in database, {2} queries saved'.format(previously_queried, len(parser.video_ids), math.ceil(previously_queried / 50)))
+        app.logger.info('{0} videos of {1} in database, {2} queries saved'.format(previously_queried, len(parser.video_ids), math.floor(previously_queried / 50)))
          
         total_seconds = 0 
         durations, datetimes = [], []
@@ -144,5 +144,4 @@ def results():
 
         data['durations'] = json.dumps(durations, indent=2)
 
-        conn.close() 
         return render_template('results.html', data=data)
