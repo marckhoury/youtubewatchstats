@@ -5,9 +5,8 @@ from rq import Worker, Queue, Connection
 
 listen = ['high', 'default', 'low']
 
-redis_url = os.getenv('REDISTOGO_URL', 'redis://localhost:6379')
-
-redis_conn = redis.from_url(redis_url)
+url = urlparse.urlparse(os.environ.get('REDISCLOUD_URL'))
+redis_conn = redis.Redis(host=url.hostname, port=url.port, password=url.password)
 
 if __name__ == '__main__':
     with Connection(redis_conn):
