@@ -2,68 +2,113 @@
   <head>
     <title>YouTube Watch Statistics</title>
     <script src="http://d3js.org/d3.v5.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="{{url_for('static', filename="js/charts.js")}}"></script>
     <script async defer src="https://buttons.github.io/buttons.js"></script>
     <link rel="stylesheet" type="text/css" href="{{url_for('static', filename="css/style.css")}}">
+    
+    <script>
+       function updateHeaderText(number_of_videos, total_days) {
+            var p = document.createElement("p");
+            var text = document.createTextNode("Graphs of your watch history are provided below. All graphs are interactive.");
+            p.appendChild(text); 
+
+            text = "You've watched <b>" +  number_of_videos + "</b> videos on YouTube, for a total of <b>" +  total_days.toFixed(2) + "</b> days of watch time.";
+    
+            $("#header-text").html(text);
+            $("section.page-header").append(p);
+        }
+
+        function appendTable() {
+            var table = document.createElement("table");
+            var table1 = document.createElement("tr");
+            var table2 = document.createElement("tr");
+            var table3 = document.createElement("tr");
+            var table11 = document.createElement("td");
+            var table12 = document.createElement("td");
+            var table21 = document.createElement("td");
+            var table22 = document.createElement("td");
+            var table31 = document.createElement("td");
+ 
+            table11.className = "monthcount";
+            table12.className = "daycount"; 
+            table21.className = "monthsum";
+            table22.className = "daysum";
+            table31.className = "histogram";
+
+            table.appendChild(table1);
+            table.appendChild(table2);
+            table.appendChild(table3);
+        
+            table1.appendChild(table11);
+            table1.appendChild(table12);
+            
+            table2.appendChild(table21);
+            table2.appendChild(table22);
+            
+            table3.appendChild(table31);
+            $("section.main-content").prepend(table);
+        }
+
+        function renderCharts(data) {
+            var margin = {top: 20, right: 20, bottom: 30, left: 40};
+            var width = 485 - margin.left - margin.right;
+            var height = 324 - margin.top - margin.bottom;
+
+            var svg = d3.select("td.monthcount").append("svg");
+            createBarChart(data.month_count, svg, margin, width, height, "number of videos");
+   
+            svg = d3.select("td.daycount").append("svg");
+            createBarChart(data.day_count, svg, margin, width, height, "number of videos");
+        
+            svg = d3.select("td.monthsum").append("svg");
+            createBarChart(data.month_sum, svg, margin, width, height, "watch time (hours)"); 
+    
+            svg = d3.select("td.daysum").append("svg");
+            createBarChart(data.day_sum, svg, margin, width, height, "watch time (hours)"); 
+
+            durations = []
+            for(let i = 0; i < data.durations.length; i++) {
+                if(data.durations[i] < 60) {
+                    durations.push(data.durations[i]);
+                }
+            }
+            svg = d3.select("td.histogram").append("svg");
+            createHistogram(durations, svg, margin, width, height); 
+        }
+
+        $(function() {
+            var interval = setInterval(function() {
+                $.ajax('{{ url_for('results') }}' + '/{{ job_id }}').done(
+                    function(data) {
+                        if(data !== "None") {
+                            data.month_count = JSON.parse(data.month_count);
+                            data.day_count = JSON.parse(data.day_count);
+                            data.month_sum = JSON.parse(data.month_sum);
+                            data.day_sum = JSON.parse(data.day_sum);
+                            data.durations = JSON.parse(data.durations);
+                            updateHeaderText(data.number_of_videos, data.total_days);
+                            appendTable();
+                            renderCharts(data);
+                            clearInterval(interval);
+                        }
+                    }
+                );
+            }, 10000);
+        });
+    </script>
+ 
   </head>
   <body>
     <section class="page-header">
-    <p>You've watched <b>{{data.number_of_videos}}</b> videos on YouTube, for a total of <b>{{'%0.2f' % data.total_days | float}} days</b> of watch time. </p>
-    <p>Graphs of your watch history are provided below. All graphs are interactive.</p>
-    
+    <p id='header-text'>Please wait while we process your data. This may take a few minutes. Your fault really, for watching so many videos...</p>
     </section>
 
-    <section class="main-content">
-    <table>
-    <tr>
-        <td class="monthcount"/>
-        <td class="daycount"/>
-    </tr>
-    <tr>
-        <td class="monthsum"/>
-        <td class="daysum"/>
-    </tr>
-    <tr>
-        <td class="histogram"/>
-    </tr>
-    </table>
-
-    <script>
-        var margin = {top: 20, right: 20, bottom: 30, left: 40};
-        var width = 485 - margin.left - margin.right;
-        var height = 324 - margin.top - margin.bottom;
-
-        var data = {{data.month_count | safe}}
-        var svg = d3.select("td.monthcount").append("svg");
-        createBarChart(data, svg, margin, width, height, "number of videos");
-   
-        data = {{data.day_count | safe}}     
-        svg = d3.select("td.daycount").append("svg");
-        createBarChart(data, svg, margin, width, height, "number of videos");
-        
-        data = {{data.month_sum | safe}}
-        svg = d3.select("td.monthsum").append("svg");
-        createBarChart(data, svg, margin, width, height, "watch time (hours)"); 
-    
-        data = {{data.day_sum | safe}}
-        svg = d3.select("td.daysum").append("svg");
-        createBarChart(data, svg, margin, width, height, "watch time (hours)"); 
-
-        data = {{data.durations | safe}}
-        data_filtered = []
-        for(let i = 0; i < data.length; i++) {
-            if(data[i] < 60) {
-                data_filtered.push(data[i]);
-            }
-        }
-        svg = d3.select("td.histogram").append("svg");
-        createHistogram(data_filtered, svg, margin, width, height); 
-    </script>
-    
+    <section id="main-content" class="main-content">
 
     <h2>Caveats</h2>
     <ol>
-        <li>The numbers reported above are computed by summing the full duration of each video in each window of time. We are not and cannot compute the amount of time you actually spent on the page. Many users may only watch short portions of videos, skipping between parts of interest. Thus the numbers above are an overestimate of your total watch time. </li>
+        <li>The reported numbers are computed by summing the full duration of each video in each window of time. We are not computing the amount of time you actually spent on the page. Many users may only watch short portions of videos, skipping between parts of interest. Thus the numbers above are an overestimate of your total watch time. </li>
         <li>Google only provides you with your recent watch history, about the last 1-2 years. In this sense, the total watch time may be an underestimate of your lifetime watch history.</li>
         <li>The numbers above do not include videos that are private or have been removed, either voluntarily or due to a copyright claim. In that sense the above numbers are an underestimate. </li>
         <li>In the final graph, where we plot a histogram of video durations, we first filter the list removing any video longer than one hour. Most video lengths are less than one hour and we found that the visualization was less informative when we plotted the full tail of the distribution.
@@ -73,7 +118,7 @@
     <p>
     <a href="https://chrome.google.com/webstore/detail/df-tube-distraction-free/mjdepdfccjgcndkmemponafgioodelna?hl=en">DF Tube</a> is a Chrome extension that makes YouTube significantly less engaging. Alternatively you could just block it outright with <a href="https://chrome.google.com/webstore/detail/stayfocusd/laankejkbhbdhmipfmgcngdelahlfoji?hl=en">StayFocusd</a>. If you choose the latter option, I'd recommend also blocking Twitch. Just...trust me on that one. </p>
     </section>   
-    
+
     <section class="site-footer">
         <center>
         <a href="https://twitter.com/marckkhoury?ref_src=twsrc%5Etfw" class="twitter-follow-button" data-size="large" data-show-screen-name="false" data-show-count="false">Follow @marckkhoury</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
