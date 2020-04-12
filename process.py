@@ -83,6 +83,7 @@ def reformat_data(datetimes, durations):
     return data
 
 def process_watch_history(data):
+    print('starting watch history job')
     data = data.decode()
     parser = YouTubeHistoryParser()
     parser.feed(data)
