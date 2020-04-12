@@ -7,22 +7,6 @@ from rq import Queue
 from worker import redis_conn
 from process import process_watch_history
 
-dictConfig({
-    'version': 1,
-    'formatters': {'default': {
-        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
-    }},
-    'handlers': {'wsgi': {
-        'class': 'logging.FileHandler',
-        'filename': 'diagnostics.log',
-        'formatter': 'default'
-    }},
-    'root': {
-        'level': 'INFO',
-        'handlers': ['wsgi']
-    }
-})
-
 app = Flask(__name__)
 
 q = Queue(connection=redis_conn)

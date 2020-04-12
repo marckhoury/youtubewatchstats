@@ -18,7 +18,9 @@ youtube = api.create_youtube_api_client()
 #conn = database.create_connection('yt-data.db')
 #database.create_table(conn)
 
-def query_api(queries):
+def query_api(queries, conn):
+    print('to query for {0} videos'.format(len(queries)))
+
     queries = list(queries)
     queries = utils.chunks(queries, 50)
        
@@ -85,7 +87,6 @@ def process_watch_history(data):
     parser = YouTubeHistoryParser()
     parser.feed(data)
 
-    #logging.logger.info('file successfully parsed')        
     conn = database.create_connection('yt-data.db')
     database.create_table(conn)
 
@@ -96,9 +97,9 @@ def process_watch_history(data):
         
     previously_queried = len(parser.video_ids) - len(queries)
     if len(queries) > 0:
-        query_api(queries)
+        query_api(queries, conn)
 
-    #logging.logger.info('{0} videos of {1} in database, {2} queries saved'.format(previously_queried, len(parser.video_ids), math.floor(previously_queried / 50)))
+    print('{0} videos of {1} in database, {2} queries saved'.format(previously_queried, len(parser.video_ids), math.floor(previously_queried / 50)))
          
     total_seconds = 0 
     durations, datetimes = [], []
