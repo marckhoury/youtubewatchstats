@@ -14,6 +14,12 @@ app = Flask(__name__)
 
 q = Queue(connection=redis_conn, default_timeout=3600)
 
+ALLOWED_EXTENSIONS = {'html', 'txt'}
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -32,11 +38,19 @@ def results(job_id=None):
             return render_template('index.html') 
     else: # request.method == 'POST'
         f = request.files['watchHistoryFile']
+        if not (f and allowed_file(f.filename)):
+            return render_template('index.html')
+    
         file_bytes = f.read()
-        file_size = sys.getsizeof(file_bytes) * 1E-6
+        if len(file_bytes) == 0:
+            return render_template('index.html') 
+
         data = gzip.compress(file_bytes)
+
+        file_size = sys.getsizeof(file_bytes) * 1E-6 # in MB
         compressed_file_size = sys.getsizeof(data) * 1E-6
         savings = file_size - compressed_file_size 
         print('original file {0:.1f} MB, compressed {1:.1f} MB, savings {2:.1f} MB ({3:.1f} %)'.format(file_size, compressed_file_size, savings, savings / file_size * 100))
+
         job = q.enqueue(process_watch_history, args=(data,))
         return render_template('results.html', data=None, job_id=job.get_id())
