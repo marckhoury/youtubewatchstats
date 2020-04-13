@@ -31,7 +31,10 @@ def results(job_id=None):
         if job_id != None:
             job = q.fetch_job(job_id)
             if job.get_status() == 'finished':
-                return gzip.decompress(job.result).decode()
+                if type(job.result) == str: # in this case an error occured
+                    return job.result
+                else: #a correct result will be of type byte array
+                    return gzip.decompress(job.result).decode()
             else:
                 return 'None'
         else:

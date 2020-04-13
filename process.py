@@ -10,42 +10,32 @@ import logging
 import numpy as np
 import pandas as pd
 
-import api
 import utils
-import database
 
+from api import ApiClient
 from parser import YouTubeHistoryParser
 
-youtube = api.create_youtube_api_client()
-#conn = database.create_connection('yt-data.db')
-#database.create_table(conn)
+api_client = ApiClient()
 
-def query_api(queries, conn):
+def query_api(queries):
     print('to query for {0} videos'.format(len(queries)))
 
     queries = list(queries)
     queries = utils.chunks(queries, 50)
-       
+    
+    result = {}   
     for query in queries:
         remaining_queries = set(query)
 
-        response = api.request_video_list(youtube, query) 
+        response = api_client.request_video_list(query) 
+        if type(response) == str: #An error occured
+            return response 
 
         for item in response['items']:
             vid = item['id']
-            title, duration = '', ''
-            if 'title' in item['snippet']:
-                title = item['snippet']['title']
-            if 'duration' in item['contentDetails']:
-                duration = item['contentDetails']['duration']
-            database.create_video(conn, (vid, title, duration, 1))
-            remaining_queries.remove(vid)
-        
-        # all remaining queries are invalid, don't query api again
-        for vid in remaining_queries:
-            database.create_video(conn, (vid, None, None, 0))
-        
-    conn.commit()
+            if 'contentDetails' in item and 'duration' in item['contentDetails']:
+                result[vid] = item['contentDetails']['duration']
+    return result
 
 def reformat_data(datetimes, durations):
     data = {}
@@ -89,26 +79,21 @@ def process_watch_history(data):
     parser = YouTubeHistoryParser()
     parser.feed(data)
 
-    conn = database.create_connection('yt-data.db')
-    database.create_table(conn)
+    parser.video_ids = parser.video_ids[:100]
+    parser.datetimes = parser.datetimes[:100]
 
-    queries = set([]) 
-    for vid in parser.video_ids:
-        if database.select_video(conn, vid) == None:
-            queries.add(vid)
-        
-    previously_queried = len(parser.video_ids) - len(queries)
-    if len(queries) > 0:
-        query_api(queries, conn)
-
-    print('{0} videos of {1} in database, {2} queries saved'.format(previously_queried, len(parser.video_ids), math.floor(previously_queried / 50)))
+    queries = set(parser.video_ids)
+    result = query_api(queries)
+    if type(result) == str: #an error occured
+        print('an error occured, type:', result)
+        return result
          
     total_seconds = 0 
     durations, datetimes = [], []
     for i in range(len(parser.video_ids)):
         vid = parser.video_ids[i]
-        _, _, duration, valid = database.select_video(conn, vid)
-        if valid:
+        if vid in result:
+            duration = result[vid]
             h, m, s = utils.parse_duration(duration) 
             seconds = 3600 * h + 60 * m + s
             durations.append(seconds / 60.0)
@@ -129,9 +114,8 @@ def process_watch_history(data):
     data = gzip.compress(data)
     compressed_file_size = sys.getsizeof(data) * 1E-6
     savings = file_size - compressed_file_size 
+
     print('original result {0:.1f} MB, compressed {1:.1f} MB, savings {2:.1f} MB ({3:.1f} %)'.format(file_size, compressed_file_size, savings, savings / file_size * 100))
-    
-    conn.close()
     print('job complete')
     return data 
 

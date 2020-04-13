@@ -8,7 +8,17 @@
     <link rel="stylesheet" type="text/css" href="{{url_for('static', filename="css/style.css")}}">
     
     <script>
-       function updateHeaderText(number_of_videos, total_days) {
+        function printError(error) {
+            var error_msg;
+            if(error == "QUOTA") {
+                error_msg = "We're sorry, but we've reached YouTube's limit on accessing data. Please try again tomorrow."
+            } else {
+                error_msg = "We've encountered an unknown error. Please try again later.";
+            }
+            $("#header-text").text(error_msg);
+        }
+     
+        function updateHeaderText(number_of_videos, total_days) {
             var p = document.createElement("p");
             var text = document.createTextNode("Graphs of your watch history are provided below. All graphs are interactive.");
             p.appendChild(text); 
@@ -82,15 +92,19 @@
                 $.ajax('{{ url_for('results') }}' + '/{{ job_id }}').done(
                     function(data) {
                         if(data !== "None") {
-                            data = JSON.parse(data);
-                            data.month_count = JSON.parse(data.month_count);
-                            data.day_count = JSON.parse(data.day_count);
-                            data.month_sum = JSON.parse(data.month_sum);
-                            data.day_sum = JSON.parse(data.day_sum);
-                            data.durations = JSON.parse(data.durations);
-                            updateHeaderText(data.number_of_videos, data.total_days);
-                            appendTable();
-                            renderCharts(data);
+                            if(data === "QUOTA" || data === "UNKNOWN") {
+                                printError(data);
+                            } else {
+                                data = JSON.parse(data);
+                                data.month_count = JSON.parse(data.month_count);
+                                data.day_count = JSON.parse(data.day_count);
+                                data.month_sum = JSON.parse(data.month_sum);
+                                data.day_sum = JSON.parse(data.day_sum);
+                                data.durations = JSON.parse(data.durations);
+                                updateHeaderText(data.number_of_videos, data.total_days);
+                                appendTable();
+                                renderCharts(data);
+                            }
                             clearInterval(interval);
                         }
                     }
