@@ -82,6 +82,7 @@
                 $.ajax('{{ url_for('results') }}' + '/{{ job_id }}').done(
                     function(data) {
                         if(data !== "None") {
+                            data = JSON.parse(data);
                             data.month_count = JSON.parse(data.month_count);
                             data.day_count = JSON.parse(data.day_count);
                             data.month_sum = JSON.parse(data.month_sum);

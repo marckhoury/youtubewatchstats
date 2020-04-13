@@ -1,3 +1,5 @@
+import sys
+import gzip
 import math
 import time
 import datetime
@@ -84,7 +86,7 @@ def reformat_data(datetimes, durations):
 
 def process_watch_history(data):
     print('starting watch history job')
-    data = data.decode()
+    data = gzip.decompress(data).decode()
     parser = YouTubeHistoryParser()
     parser.feed(data)
 
@@ -122,7 +124,16 @@ def process_watch_history(data):
     data = reformat_data(datetimes, durations)
     data['number_of_videos'] = number_of_videos
     data['total_days'] = total_days
+    
+    data = json.dumps(data).encode()
+    file_size = sys.getsizeof(data) * 1E-6
+    data = gzip.compress(data)
+    compressed_file_size = sys.getsizeof(data) * 1E-6
+    savings = file_size - compressed_file_size 
+    print('original result {0:.1f} MB, compressed {1:.1f} MB, savings {2:.1f} MB ({3:.1f} %)'.format(file_size, compressed_file_size, savings, savings / file_size * 100))
+    
     conn.close()
+    print('job complete')
     return data 
 
 

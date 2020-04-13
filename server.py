@@ -1,3 +1,6 @@
+import sys
+import gzip 
+
 from flask import Flask
 from flask import render_template, request
 from werkzeug.utils import secure_filename
@@ -22,14 +25,18 @@ def results(job_id=None):
         if job_id != None:
             job = q.fetch_job(job_id)
             if job.get_status() == 'finished':
-                return job.result
+                return gzip.decompress(job.result).decode()
             else:
                 return 'None'
         else:
             return render_template('index.html') 
     else: # request.method == 'POST'
-        import sys
         f = request.files['watchHistoryFile']
-        data = f.read()
+        file_bytes = f.read()
+        file_size = sys.getsizeof(file_bytes) * 1E-6
+        data = gzip.compress(file_bytes)
+        compressed_file_size = sys.getsizeof(data) * 1E-6
+        savings = file_size - compressed_file_size 
+        print('original file {0:.1f} MB, compressed {1:.1f} MB, savings {2:.1f} MB ({3:.1f} %)'.format(file_size, compressed_file_size, savings, savings / file_size * 100))
         job = q.enqueue(process_watch_history, args=(data,), timeout='5m')
         return render_template('results.html', data=None, job_id=job.get_id())
