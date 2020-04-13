@@ -2,7 +2,7 @@ import sys
 import gzip 
 
 from flask import Flask
-from flask import render_template, request
+from flask import render_template, request, url_for, redirect
 from werkzeug.utils import secure_filename
 from logging.config import dictConfig
 from rq import Queue 
@@ -35,15 +35,15 @@ def results(job_id=None):
             else:
                 return 'None'
         else:
-            return render_template('index.html') 
+            return redirect(url_for('index')) 
     else: # request.method == 'POST'
         f = request.files['watchHistoryFile']
         if not (f and allowed_file(f.filename)):
-            return render_template('index.html')
+            return redirect(url_for('index'))
     
         file_bytes = f.read()
         if len(file_bytes) == 0:
-            return render_template('index.html') 
+            return redirect(url_for('index'))
 
         data = gzip.compress(file_bytes)
 
