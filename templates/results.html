@@ -79,7 +79,7 @@
 
             durations = []
             for(let i = 0; i < data.durations.length; i++) {
-                if(data.durations[i] < 60) {
+                if(data.durations[i] < 30) {
                     durations.push(data.durations[i]);
                 }
             }
@@ -126,7 +126,7 @@
         <li>The reported numbers are computed by summing the full duration of each video in each window of time. We are not computing the amount of time you actually spent on the page. Many users may only watch short portions of videos, skipping between parts of interest. Thus the numbers above are an overestimate of your total watch time. </li>
         <li>Google only provides you with your recent watch history, about the last 1-2 years. In this sense, the total watch time may be an underestimate of your lifetime watch history.</li>
         <li>The numbers above do not include videos that are private or have been removed, either voluntarily or due to a copyright claim. In that sense the above numbers are an underestimate. </li>
-        <li>In the final graph, where we plot a histogram of video durations, we first filter the list removing any video longer than one hour. Most video lengths are less than one hour and we found that the visualization was less informative when we plotted the full tail of the distribution.
+        <li>In the final graph, where we plot a histogram of video durations, we first filter the list removing any video longer than a half hour. Most video lengths are less than thirty minutes and we found that the visualization was less informative when we plotted the full tail of the distribution.
     </ol> 
    
     <h2>Resources for YouTube Addiction</h2>

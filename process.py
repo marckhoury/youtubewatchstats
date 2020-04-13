@@ -79,9 +79,6 @@ def process_watch_history(data):
     parser = YouTubeHistoryParser()
     parser.feed(data)
 
-    parser.video_ids = parser.video_ids[:100]
-    parser.datetimes = parser.datetimes[:100]
-
     queries = set(parser.video_ids)
     result = query_api(queries)
     if type(result) == str: #an error occured
