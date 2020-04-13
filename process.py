@@ -38,13 +38,12 @@ def query_api(queries, conn):
                 title = item['snippet']['title']
             if 'duration' in item['contentDetails']:
                 duration = item['contentDetails']['duration']
-                
             database.create_video(conn, (vid, title, duration, 1))
             remaining_queries.remove(vid)
         
-            # all remaining queries are invalid, don't query api again
-            for vid in remaining_queries:
-                database.create_video(conn, (vid, None, None, 0))
+        # all remaining queries are invalid, don't query api again
+        for vid in remaining_queries:
+            database.create_video(conn, (vid, None, None, 0))
         
     conn.commit()
 
