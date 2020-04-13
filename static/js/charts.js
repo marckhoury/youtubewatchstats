@@ -24,6 +24,7 @@ function createBarChart(data, svg, margin, width, height, ylabel) {
         }
     }   
     for(let i = 0; i < data.length; i++) {
+        data[i].date[1] -= 1; //months are 0-indexed 
         const d = new (Function.prototype.bind.apply(
                        Date, [null].concat(data[i].date)));
         data[i].dateStr = dtf.format(d);
