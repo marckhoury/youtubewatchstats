@@ -12,7 +12,7 @@ from process import process_watch_history
 
 app = Flask(__name__)
 
-q = Queue(connection=redis_conn)
+q = Queue(connection=redis_conn, default_timeout=3600)
 
 @app.route('/')
 def index():
@@ -38,5 +38,5 @@ def results(job_id=None):
         compressed_file_size = sys.getsizeof(data) * 1E-6
         savings = file_size - compressed_file_size 
         print('original file {0:.1f} MB, compressed {1:.1f} MB, savings {2:.1f} MB ({3:.1f} %)'.format(file_size, compressed_file_size, savings, savings / file_size * 100))
-        job = q.enqueue(process_watch_history, args=(data,), timeout='5m')
+        job = q.enqueue(process_watch_history, args=(data,))
         return render_template('results.html', data=None, job_id=job.get_id())
