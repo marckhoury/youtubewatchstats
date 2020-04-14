@@ -32,13 +32,3 @@ def chunks(arr, k):
     for i in range(0, len(arr), k):
         res.append(arr[i:i+k])
     return res
-
-def read_database(filename):
-    data = {}
-    with open(filename, 'r') as fin:
-        json_data = json.load(fin) 
-        for item in json_data['items']:
-            vid = item['id']
-            duration = item['contentDetails']['duration']
-            data[vid] = duration
-    return data
