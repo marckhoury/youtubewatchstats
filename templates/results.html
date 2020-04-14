@@ -29,6 +29,27 @@
             $("section.page-header").append(p);
         }
 
+        function appendHeaderTweet(number_of_videos, total_days) {
+            var a = document.createElement("a");
+            var script = document.createElement("script");
+        
+            a.href = "https://twitter.com/share?ref_src=twsrc%5Etfw";
+            a.setAttribute("class", "twitter-share-button");
+            a.setAttribute("data-size", "large");
+            a.setAttribute("data-text", "I've watched " + number_of_videos + " videos on YouTube, for a total of " + total_days.toFixed(2) + " days of watch time.");
+            a.setAttribute("data-url", "https://youtubewatchstats.herokuapp.com/");
+            a.setAttribute("data-via", "marckkhoury");
+            a.setAttribute("data-show-count", "false");
+            a.text = "Tweet";
+            
+            script.setAttribute("async", "");
+            script.src= "https://platform.twitter.com/widgets.js";
+            script.charset = "utf-8";
+            
+            $("section.page-header").append(a);
+            $("section.page-header").append(script);
+        }
+
         function appendTable() {
             var table = document.createElement("table");
             var table1 = document.createElement("tr");
@@ -102,6 +123,7 @@
                                 data.day_sum = JSON.parse(data.day_sum);
                                 data.durations = JSON.parse(data.durations);
                                 updateHeaderText(data.number_of_videos, data.total_days);
+                                appendHeaderTweet(data.number_of_videos, data.total_days);
                                 appendTable();
                                 renderCharts(data);
                             }
