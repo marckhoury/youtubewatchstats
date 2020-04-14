@@ -1,5 +1,7 @@
+import os
 import sys
 import gzip 
+import psycopg2
 
 from flask import Flask
 from flask import render_template, request, url_for, redirect
@@ -15,7 +17,8 @@ app = Flask(__name__)
 q = Queue(connection=redis_conn, default_timeout=3600)
 
 ALLOWED_EXTENSIONS = {'html', 'txt'}
-
+DATABASE_URL = os.environ["DATABASE_URL"]
+        
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -57,3 +60,28 @@ def results(job_id=None):
 
         job = q.enqueue(process_watch_history, args=(data,))
         return render_template('results.html', data=None, job_id=job.get_id())
+
+@app.route('/errors', methods=['GET', 'POST'])
+def errors():
+    if request.method == 'GET':
+        return redirect(url_for('index')) 
+    else: # request.method == 'POST'
+        f = request.files['watchHistoryFile']
+        if not (f and allowed_file(f.filename)):
+            return render_template('thanks.html')
+
+        file_bytes = f.read()
+        if len(file_bytes) == 0:
+            return render_template('thanks.html')
+
+        data = gzip.compress(file_bytes)
+
+        conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+        cursor = conn.cursor()
+        cmd = "INSERT INTO errors (file) VALUES (%s)"
+        
+        cursor.execute(cmd, (data,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return render_template('thanks.html')

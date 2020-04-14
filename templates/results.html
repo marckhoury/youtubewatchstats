@@ -12,10 +12,36 @@
             var error_msg;
             if(error == "QUOTA") {
                 error_msg = "We're sorry, but we've reached YouTube's limit on accessing data. Please try again tomorrow."
+            } else if(error == "PARSER") {
+                error_msg = "We had a problem parsing your data. If you'd be willing to upload your data again, it would really help us improve our service! This time we will save the file to debug our platform and delete it once we've fixed the error."
             } else {
                 error_msg = "We've encountered an unknown error. Please try again later.";
             }
             $("#header-text").text(error_msg);
+
+            if(error == "PARSER") {
+                var form = document.createElement("form");
+                var input1 = document.createElement("input");
+                var input2 = document.createElement("input");
+               
+                form.action = "/errors";
+                form.method = "post";
+                form.enctype = "multipart/form-data";
+                
+                input1.setAttribute("class", "btn");
+                input1.setAttribute("type", "file");
+                input1.setAttribute("name", "watchHistoryFile");
+                input1.setAttribute("id", "fileToUpload");
+            
+                input2.setAttribute("class", "btn");
+                input2.setAttribute("type", "submit");
+                input2.setAttribute("value", "Submit");
+                input2.setAttribute("name", "submit");
+            
+                form.appendChild(input1);
+                form.appendChild(input2);
+                $("section.page-header").append(form);
+            }
         }
      
         function updateHeaderText(number_of_videos, total_days) {
@@ -113,7 +139,7 @@
                 $.ajax('{{ url_for('results') }}' + '/{{ job_id }}').done(
                     function(data) {
                         if(data !== "None") {
-                            if(data === "QUOTA" || data === "UNKNOWN") {
+                            if(data === "QUOTA" || data === "PARSER" || data === "UNKNOWN") {
                                 printError(data);
                             } else {
                                 data = JSON.parse(data);
