@@ -34,6 +34,14 @@ class ApiClient:
         http = httplib2.Http()
         response = request.execute(http=http)
 
+        #the code below is intended to rotate keys in a thread safe way
+        #it looks like we waste an api call, since the result must be error to enter the loop
+        #this is true for the first thread that enters the loop, but not true for subsequent threads
+        #a thread must first acquire the lock then check if the current api client has not been 
+        #updated by a different thread, and thus may be valid
+        #once a thread has acquired the lock and confirmed that the client has reached quota
+        #it can safely update the client key without worrying about other threads
+        #once a successful key is found all subsequent threads execute the loop once to update response
         if 'error' in response:
             self.lock.acquire()
             attempted_keys = 0
