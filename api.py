@@ -1,5 +1,6 @@
 import os
 import json
+import httplib2
 
 import googleapiclient.discovery
 import googleapiclient.errors
@@ -24,7 +25,11 @@ class ApiClient:
                     part="contentDetails",
                     id=vids
                 )
-        response = request.execute()
+
+        #httplib2, underlying google api client, is not thread safe
+        #thus we create an http instance for each thread
+        http = httplib2.Http()
+        response = request.execute(http=http)
 
         attempted_keys = 1
         while 'error' in response:
@@ -42,7 +47,7 @@ class ApiClient:
                             part="contentDetails",
                             id=vids
                         )
-                response = request.execute()
+                response = request.execute(http=http)
                 attempted_keys += 1
             else: #unknown error
                 return "UNKNOWN"

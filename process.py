@@ -6,6 +6,7 @@ import datetime
 import json
 import redis
 import logging
+import concurrent.futures
 
 import numpy as np
 import pandas as pd
@@ -22,19 +23,17 @@ def query_api(queries):
 
     queries = list(queries)
     queries = utils.chunks(queries, 50)
-    
-    result = {}   
-    for query in queries:
-        remaining_queries = set(query)
+   
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        result = {}   
+        for response in executor.map(api_client.request_video_list, queries):
+            if type(response) == str: #An error occured
+                return response 
 
-        response = api_client.request_video_list(query) 
-        if type(response) == str: #An error occured
-            return response 
-
-        for item in response['items']:
-            vid = item['id']
-            if 'contentDetails' in item and 'duration' in item['contentDetails']:
-                result[vid] = item['contentDetails']['duration']
+            for item in response['items']:
+                vid = item['id']
+                if 'contentDetails' in item and 'duration' in item['contentDetails']:
+                    result[vid] = item['contentDetails']['duration']
     return result
 
 def reformat_data(datetimes, durations):
