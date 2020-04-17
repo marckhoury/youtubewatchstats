@@ -28,12 +28,13 @@ class ApiClient:
                     part="contentDetails",
                     id=vids
                 )
-
         #httplib2, underlying google api client, is not thread safe
         #thus we create an http instance for each thread
         http = httplib2.Http()
-        response = request.execute(http=http)
-
+        try: 
+            response = request.execute(http=http)
+        except googleapiclient.errors.HttpError as e:
+            response = json.loads(e.content)
         #the code below is intended to rotate keys in a thread safe way
         #it looks like we waste an api call, since the result must be error to enter the loop
         #this is true for the first thread that enters the loop, but not true for subsequent threads
@@ -51,9 +52,12 @@ class ApiClient:
                             part="contentDetails",
                             id=vids
                         )
-                response = request.execute(http=http)
+                try:
+                    response = request.execute(http=http)
+                except googleapiclient.errors.HttpError as e:
+                    response = json.loads(e.content)
                 if 'error' in response:
-                    if response['error']['errors'][0]['reason'] == 'quotaExceeded':
+                    if response['error']['errors'][0]['reason'] in ['quotaExceeded', 'dailyLimitExceeded']:
                         self.current_key = (self.current_key + 1) % len(self.keys)
                         self.client = googleapiclient.discovery.build(
                                     self.api_service_name, 
