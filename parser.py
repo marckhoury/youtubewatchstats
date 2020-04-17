@@ -1,6 +1,7 @@
 import os
 import time
 import datetime 
+import dateparser
 import dateutil.parser
 
 from html.parser import HTMLParser
@@ -16,6 +17,7 @@ class YouTubeHistoryParser(HTMLParser):
         self.inside_content_cell = False
         self.first_a_element = False
         self.second_a_element = False
+        self.flag_language = False
 
     def handle_starttag(self, tag, attrs): 
         if self.inside_content_cell:
@@ -44,7 +46,23 @@ class YouTubeHistoryParser(HTMLParser):
         if self.inside_content_cell:
             if self.first_a_element and not self.second_a_element:
                 try: 
-                    dt = dateutil.parser.parse(data, ignoretz=True) 
+                    dt = dateutil.parser.parse(data, ignoretz=True)
                     self.datetimes.append(dt)
                 except ValueError as e:
-                    pass
+                    #dateparser is much slower than dateutil.parser
+                    #since it checks for multiple languages
+                    #only use if necessary
+                    try:
+                        dt = dateparser.parse(data)
+                        if dt is not None:
+                            dt = dt.replace(tzinfo=None)
+                            self.datetimes.append(dt)
+                    except ValueError as e:
+                        self.flag_language = True
+   
+    #replaces alternative abbreviations for months that 
+    #dateparser does not understand to ones that it does
+    #unfortunately these examples are found by trial and error 
+    def filter_date(self, date):
+        date = date.replace('paĹş', 'paź') #polish abbreviations for october
+        return date
