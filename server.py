@@ -16,7 +16,7 @@ app = Flask(__name__)
 
 q = Queue(connection=redis_conn, default_timeout=3600)
 
-ALLOWED_EXTENSIONS = {'html', 'txt'}
+ALLOWED_EXTENSIONS = {'json', 'txt'}
 DATABASE_URL = os.environ["DATABASE_URL"]
         
 def allowed_file(filename):
@@ -31,16 +31,20 @@ def index():
 @app.route('/results', methods=['GET', 'POST'])
 def results(job_id=None):
     if request.method == 'GET':
-        if job_id != None:
+        if job_id is not None:
             job = q.fetch_job(job_id)
-            if job.get_status() == 'finished':
-                print('result returned')
-                if type(job.result) == str: # in this case an error occured
-                    return job.result
-                else: #a correct result will be of type byte array
-                    return gzip.decompress(job.result).decode()
+            if job is not None:
+                if job.get_status() == 'finished':
+                    print('result returned')
+                    if type(job.result) == str: # in this case an error occured
+                        print(job.result)
+                        return job.result
+                    else: #a correct result will be of type byte array
+                        return gzip.decompress(job.result).decode()
+                else:
+                    return 'None'
             else:
-                return 'None'
+                return "UNKNOWN"
         else:
             return redirect(url_for('index')) 
     else: # request.method == 'POST'
