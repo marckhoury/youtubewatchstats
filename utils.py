@@ -1,30 +1,19 @@
 import json
+import re
 
 def parse_duration(duration):
+    pattern = r"\d+[HMS]"
     h, m, s = 0, 0, 0
-
-    _, duration = duration.split('T')
-    tokens = duration.split('H')
-    if len(tokens) == 1:
-        duration = tokens[0]
-    else:
-        h = int(tokens[0])
-        duration = tokens[1]
-
-    tokens = duration.split('M')
-    if len(tokens) == 1:
-        duration = tokens[0]
-    else:
-        m = int(tokens[0])
-        duration = tokens[1]
-
-    tokens = duration.split('S')
-    if len(tokens) == 1:
-        duration = tokens[0]
-    else:
-        s = int(tokens[0])
-        duration = tokens[1]
-
+    matches = re.finditer(pattern, duration)
+    for i, match in enumerate(matches):
+        match = match.group()
+        val, unit = int(match[:-1]), match[-1]   
+        if unit == 'H':
+            h = val
+        elif unit == 'M':
+            m = val 
+        else:
+            s = val
     return h, m, s
 
 def chunks(arr, k):
