@@ -79,12 +79,14 @@ def process_watch_history(data):
         data = json.loads(data)
     except json.decoder.JSONDecodeError as e:
         return "PARSER"
- 
+    if type(data) != list:
+        print('json type ', type(data))
+        return "PARSER"
     parser = YouTubeHistoryParser()
     parser.feed(data)
 
     print('{0} video ids and {1} datetimes'.format(len(parser.video_ids), len(parser.datetimes)))
-    if len(parser.video_ids) == 0:
+    if len(parser.video_ids) == 0 or len(parser.video_ids) != len(parser.datetimes):
         return "PARSER"
 
     queries = set(parser.video_ids)

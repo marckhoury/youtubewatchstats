@@ -13,7 +13,10 @@ class YouTubeHistoryParser():
                 url = entry['titleUrl']
                 
                 vid = url[url.find('watch')+8:] 
-                dt = dateutil.parser.parse(entry['time'], ignoretz=True)
-                
                 self.video_ids.append(vid)
-                self.datetimes.append(dt) 
+                
+                try:
+                    dt = dateutil.parser.parse(entry['time'], ignoretz=True)
+                    self.datetimes.append(dt)  
+                except ValueError as e:
+                    pass
